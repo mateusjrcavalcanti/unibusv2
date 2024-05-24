@@ -1,0 +1,24 @@
+services:
+
+  # Serviços de banco de dados
+  database:  
+    container_name: unibus_database
+    image: postgres   
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-root}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
+      DATABASE_URL: ${DATABASE_URL}    
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - unibus_database:/var/lib/postgresql/data 
+      - ./packages/db/docker-entrypoint-initdb.d/:/docker-entrypoint-initdb.d/
+    ports:
+      - "5432:5432"
+
+volumes:
+  unibus_database:
