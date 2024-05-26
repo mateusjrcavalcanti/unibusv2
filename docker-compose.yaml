@@ -15,7 +15,7 @@ services:
       timeout: 5s
       retries: 10
     volumes:
-      - unibus_database:/var/lib/postgresql/data 
+      - postgresql_data:/var/lib/postgresql/data 
       - ./packages/db/docker-entrypoint-initdb.d/:/docker-entrypoint-initdb.d/
     ports:
       - "5432:5432"

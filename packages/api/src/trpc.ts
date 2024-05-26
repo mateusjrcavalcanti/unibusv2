@@ -10,8 +10,8 @@ import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
 
-import type { Session } from "@acme/auth";
-import prisma from "@acme/db";
+import type { Session } from "@unibus/auth";
+import prisma from "@unibus/db";
 
 /**
  * 1. CONTEXT
