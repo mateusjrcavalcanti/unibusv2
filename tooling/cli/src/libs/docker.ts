@@ -89,41 +89,48 @@ export const createImage = async ({
 }) => {
   const { dockerfiles } = await verifyPackageJson();
   if (build || (await findImage({ name, tag, prefix })) === undefined) {
-    const image = docker.buildImage(
-      {
-        context: dockerfiles,
-        src: files,
-      },
-      { t: `${prefix}-${name}:${tag}`, dockerfile },
-      function (err, response) {
-        if (err) {
-          console.log(
-            chalk.red.bold(`Erro ao criar imagem:`),
-            chalk.red(`${err.message}`),
-          );
-        }
+    const image = await new Promise<string>((resolve, reject) => {
+      docker.buildImage(
+        {
+          context: dockerfiles,
+          src: files,
+        },
+        { t: `${prefix}-${name}:${tag}`, dockerfile },
+        (err, response) => {
+          if (err) {
+            console.log(
+              chalk.red.bold(`Erro ao criar imagem:`),
+              chalk.red(`${err.message}`),
+            );
+            reject(err);
+          }
 
-        response?.on("data", (chunk) => {
-          const log = JSON.parse(chunk.toString("utf8"));
-          if (log) console.log(log?.stream?.trim());
-        });
+          response?.on("data", (chunk) => {
+            const log = JSON.parse(chunk.toString("utf8")).stream;
+            if (log) console.log(log?.trim());
+          });
 
-        response?.on("error", (err) => {
-          console.log(
-            chalk.red.bold(`Erro ao criar imagem:`),
-            chalk.red(`${err.message}`),
-          );
-        });
+          response?.on("error", (err) => {
+            console.log(
+              chalk.red.bold(`Erro ao criar imagem:`),
+              chalk.red(`${err.message}`),
+            );
+            reject(err);
+          });
 
-        response?.on("end", () => {
-          console.log(
-            chalk.green(`Imagem ${prefix}-${name}:${tag} criada com sucesso`),
-          );
-        });
-      },
-    );
+          response?.on("end", () => {
+            console.log(
+              chalk.green(`Imagem ${prefix}-${name}:${tag} criada com sucesso`),
+            );
+            resolve(`${prefix}-${name}:${tag}`);
+          });
+        },
+      );
+    });
+    return image;
   } else {
     console.log("Imagem em cache");
+    return `${prefix}-${name}:${tag}`;
   }
 };
 
@@ -134,7 +141,7 @@ export const createContainer = async ({
 }: ContainerCreateOptions) => {
   const containerName = `${prefix}-${containerProps.name}`;
 
-  // Create authority file
+  // Run preFunc if exists
   if (preFunc) await preFunc();
 
   // Create container
@@ -183,7 +190,13 @@ export const runningContainer = async ({
   if (container && container?.State == "exited")
     await docker.getContainer(container?.Id as string).remove();
 
-  if (!(await findImage({ name: containerProps.name, tag, prefix })))
+  const imageExists = await findImage({
+    name: containerProps.name,
+    tag,
+    prefix,
+  });
+
+  if (!imageExists) {
     await createImage({
       prefix,
       name: containerProps.name,
@@ -191,6 +204,8 @@ export const runningContainer = async ({
       dockerfile: dockerfile || "Dockerfile",
       build: build || false,
     });
+    console.log("resolvido");
+  }
 
   await createContainer({
     prefix,

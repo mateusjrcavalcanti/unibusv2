@@ -41,34 +41,41 @@ exports.findImage = findImage;
 const createImage = async ({ prefix = "unibus", name, tag = "latest", dockerfile, build, files, }) => {
     const { dockerfiles } = await (0, paths_1.verifyPackageJson)();
     if (build || (await (0, exports.findImage)({ name, tag, prefix })) === undefined) {
-        const image = docker.buildImage({
-            context: dockerfiles,
-            src: files,
-        }, { t: `${prefix}-${name}:${tag}`, dockerfile }, function (err, response) {
-            if (err) {
-                console.log(chalk_1.default.red.bold(`Erro ao criar imagem:`), chalk_1.default.red(`${err.message}`));
-            }
-            response?.on("data", (chunk) => {
-                const log = JSON.parse(chunk.toString("utf8"));
-                if (log)
-                    console.log(log?.stream?.trim());
-            });
-            response?.on("error", (err) => {
-                console.log(chalk_1.default.red.bold(`Erro ao criar imagem:`), chalk_1.default.red(`${err.message}`));
-            });
-            response?.on("end", () => {
-                console.log(chalk_1.default.green(`Imagem ${prefix}-${name}:${tag} criada com sucesso`));
+        const image = await new Promise((resolve, reject) => {
+            docker.buildImage({
+                context: dockerfiles,
+                src: files,
+            }, { t: `${prefix}-${name}:${tag}`, dockerfile }, (err, response) => {
+                if (err) {
+                    console.log(chalk_1.default.red.bold(`Erro ao criar imagem:`), chalk_1.default.red(`${err.message}`));
+                    reject(err);
+                }
+                response?.on("data", (chunk) => {
+                    const log = JSON.parse(chunk.toString("utf8")).stream;
+                    if (log)
+                        console.log(log?.trim());
+                });
+                response?.on("error", (err) => {
+                    console.log(chalk_1.default.red.bold(`Erro ao criar imagem:`), chalk_1.default.red(`${err.message}`));
+                    reject(err);
+                });
+                response?.on("end", () => {
+                    console.log(chalk_1.default.green(`Imagem ${prefix}-${name}:${tag} criada com sucesso`));
+                    resolve(`${prefix}-${name}:${tag}`);
+                });
             });
         });
+        return image;
     }
     else {
         console.log("Imagem em cache");
+        return `${prefix}-${name}:${tag}`;
     }
 };
 exports.createImage = createImage;
 const createContainer = async ({ prefix = "unibus", preFunc, containerProps, }) => {
     const containerName = `${prefix}-${containerProps.name}`;
-    // Create authority file
+    // Run preFunc if exists
     if (preFunc)
         await preFunc();
     // Create container
@@ -98,7 +105,12 @@ const runningContainer = async ({ prefix, preFunc, image, containerProps, }) => 
         await docker.getContainer(container?.Id).stop();
     if (container && container?.State == "exited")
         await docker.getContainer(container?.Id).remove();
-    if (!(await (0, exports.findImage)({ name: containerProps.name, tag, prefix })))
+    const imageExists = await (0, exports.findImage)({
+        name: containerProps.name,
+        tag,
+        prefix,
+    });
+    if (!imageExists) {
         await (0, exports.createImage)({
             prefix,
             name: containerProps.name,
@@ -106,6 +118,8 @@ const runningContainer = async ({ prefix, preFunc, image, containerProps, }) => 
             dockerfile: dockerfile || "Dockerfile",
             build: build || false,
         });
+        console.log("resolvido");
+    }
     await (0, exports.createContainer)({
         prefix,
         preFunc,
