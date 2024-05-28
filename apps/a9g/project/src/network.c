@@ -1,17 +1,26 @@
-
-
+// Include SDK libraries
 #include <string.h>
 #include <stdio.h>
 #include <api_os.h>
 #include <api_event.h>
 #include <api_network.h>
 #include <api_debug.h>
+#include "api_lbs.h" //-> get location(longitude and latitude) from server though base station(BS) information
 
+// Include the project libraries
 #include "network.h"
 
+// Define the network task event
 HANDLE NetworkTaskHandle = NULL;
-HANDLE semGetCellInfo = NULL;
 
+// Define shared variables
+bool hasNetwork = false;
+
+// Define local variables
+float networkLatitude = 0.0;
+float networkLongitude = 0.0;
+
+/* ===[ Define network functions here ]=== */
 bool AttachActivate()
 {
     uint8_t status;
@@ -64,32 +73,17 @@ bool AttachActivate()
 
 void NetworkEventDispatch(API_Event_t *pEvent)
 {
+    static uint8_t lbsCount = 0;
+
     switch (pEvent->id)
     {
     case API_EVENT_ID_NETWORK_REGISTER_SEARCHING:
         Trace(2, "API_EVENT_ID_NETWORK_REGISTER_SEARCHING");
+        hasNetwork = false;
         break;
     case API_EVENT_ID_NETWORK_DEREGISTER:
         Trace(2, "API_EVENT_ID_NETWORK_DEREGISTER");
         break;
-    case API_EVENT_ID_NETWORK_CELL_INFO:
-    {
-        // param1: cell number (1 serving cell and param1-1 neighbor cells), pParam1: Network_Location_t[param1]
-        int cellCount = pEvent->param1;
-        Network_Location_t *cellInfoList = (Network_Location_t *)pEvent->pParam1;
-        Trace(2, "API_EVENT_ID_NETWORK_CELL_INFO, cell number: %d", cellCount);
-        for (int i = 0; i < cellCount; i++)
-        {
-            Trace(2, "Cell %d: MCC: %d%d%d, MNC: %d%d%d, LAC: %d, CellID: %d, BSIC: %d, RxLev: %d, RxLevSub: %d, ARFCN: %d",
-                  i,
-                  cellInfoList[i].sMcc[0], cellInfoList[i].sMcc[1], cellInfoList[i].sMcc[2],
-                  cellInfoList[i].sMnc[0], cellInfoList[i].sMnc[1], cellInfoList[i].sMnc[2],
-                  cellInfoList[i].sLac, cellInfoList[i].sCellID,
-                  cellInfoList[i].iBsic, cellInfoList[i].iRxLev,
-                  cellInfoList[i].iRxLevSub, cellInfoList[i].nArfcn);
-        }
-        break;
-    }
     case API_EVENT_ID_NETWORK_AVAILABEL_OPERATOR:
     {
         // param1: operator number, pParam1: operator info list (Network_Operator_Info_t[param1])
@@ -158,6 +152,7 @@ void NetworkEventDispatch(API_Event_t *pEvent)
         break;
     case API_EVENT_ID_NETWORK_ACTIVATED:
         Trace(2, "API_EVENT_ID_NETWORK_ACTIVATED");
+        hasNetwork = true;
         break;
     case API_EVENT_ID_SIGNAL_QUALITY:
         Trace(2, "API_EVENT_ID_SIGNAL_QUALITY: [%d] SQ(0~31,99(unknown)), [%d] RXQUAL(0~7,99(unknown)) [%d] (RSSI = SQ*2-113)", pEvent->param1, pEvent->param2, pEvent->param1 * 2 - 113);
