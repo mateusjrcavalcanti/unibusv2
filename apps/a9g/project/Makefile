@@ -11,6 +11,7 @@ LOCAL_API_DEPENDS := \
 LOCAL_ADD_INCLUDE := include\
                     include/std_inc \
                     include/api_inc \
+                    libs/utils/include 
 
 
 # Set this to any non-null string to signal a module which 

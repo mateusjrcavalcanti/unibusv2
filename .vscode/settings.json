@@ -3,5 +3,27 @@
     {
       "mode": "auto"
     }
-  ]
+  ],
+  "files.associations": {
+    "stdbool.h": "c",
+    "api_event.h": "c",
+    "stdint.h": "c",
+    "pdp.h": "c",
+    "api_os.h": "c",
+    "string.h": "c",
+    "api_network.h": "c",
+    "api_debug.h": "c",
+    "stdio.h": "c",
+    "unibus.h": "c",
+    "mqtt.h": "c",
+    "api_socket.h": "c",
+    "buffer.h": "c",
+    "api_hal_uart.h": "c",
+    "gps.h": "c",
+    "gps_parse.h": "c",
+    "api_info.h": "c",
+    "hello.h": "c",
+    "network.h": "c",
+    "math.h": "c"
+  }
 }

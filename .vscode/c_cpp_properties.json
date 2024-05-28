@@ -1,0 +1,19 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/apps/a9g/data/**",
+                "${workspaceFolder}/apps/a9g/data/include/**",
+                "${workspaceFolder}/apps/a9g/data/libs/**",
+                "${workspaceFolder}/apps/a9g/project/include"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "c17",
+            "cppStandard": "gnu++17",
+            "intelliSenseMode": "linux-gcc-x64"
+        }
+    ],
+    "version": 4
+}

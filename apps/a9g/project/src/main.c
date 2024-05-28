@@ -1,38 +1,39 @@
 
-#include "stdbool.h"
-#include "stdint.h"
 
-#include "api_os.h"
-#include "api_debug.h"
-#include "api_event.h"
+#include <string.h>
+#include <stdio.h>
+#include <api_os.h>
+#include <api_event.h>
+#include <api_network.h>
+#include <api_debug.h>
 
-#define MAIN_TASK_STACK_SIZE (2048 * 2)
-#define MAIN_TASK_PRIORITY 0
-#define MAIN_TASK_NAME "Main Test Task"
+#include "main.h"
+#include "network.h"
 
-#define SECOND_TASK_STACK_SIZE (2048 * 2)
-#define SECOND_TASK_PRIORITY 1
-#define SECOND_TASK_NAME "Second Test Task"
+HANDLE mainTaskHandle = NULL;
 
-static HANDLE mainTaskHandle = NULL;
-static HANDLE secondTaskHandle = NULL;
-
-void EventDispatch(API_Event_t *pEvent)
+static void EventDispatch(API_Event_t *pEvent)
 {
     switch (pEvent->id)
     {
-    default:
-        Trace(1, "Event Param1: %p, Param2: %p", pEvent->pParam1, pEvent->pParam2);
+    // SYSTEM
+    case API_EVENT_ID_SYSTEM_READY:
+        Trace(2, "API_EVENT_ID_SYSTEM_READY");
         break;
-    }
-}
-
-void SecondTask(void *pData)
-{
-    while (1)
-    {
-        Trace(1, "Hello GPRS ");
-        OS_Sleep(3000);
+    // SIM card
+    case API_EVENT_ID_NO_SIMCARD:
+        Trace(2, "API_EVENT_ID_SIMCARD: %d", pEvent->param1);
+        break;
+    case API_EVENT_ID_SIMCARD_DROP:
+        Trace(2, "API_EVENT_ID_SIMCARD_DROP: %d", pEvent->param1);
+        break;
+    // SIGNAL
+    case API_EVENT_ID_SIGNAL_QUALITY:
+        Trace(2, "API_EVENT_ID_SIGNAL_QUALITY: [%d] SQ(0~31,99(unknown)), [%d] RXQUAL(0~7,99(unknown)) [%d] (RSSI = SQ*2-113)", pEvent->param1, pEvent->param2, pEvent->param1 * 2 - 113);
+        break;
+    default:
+        NetworkEventDispatch(pEvent);
+        break;
     }
 }
 
@@ -40,8 +41,7 @@ void MainTask(void *pData)
 {
     API_Event_t *event = NULL;
 
-    secondTaskHandle = OS_CreateTask(SecondTask,
-                                     NULL, NULL, SECOND_TASK_STACK_SIZE, SECOND_TASK_PRIORITY, 0, 0, SECOND_TASK_NAME);
+    OS_CreateTask(NetworkTestTask, NULL, NULL, 2048, 1, 0, 0, "Get Operator Info Task");
 
     while (1)
     {
