@@ -56,20 +56,18 @@ export const a9gContainer = async () => {
 const createAuhorityFile = async () => {
   const { a9g } = await verifyPackageJson();
   const authorityFile = `${a9g}/data/.Xauthority`;
-  // verifica que o arquivo de autoridade existe
-  if (!fs.existsSync(authorityFile)) {
-    fs.writeFileSync(authorityFile, "");
-    const command = `xauth nlist :0 | sed -e 's/^..../ffff/' | xauth -f '${authorityFile}' nmerge -`;
 
-    exec(command, (error, stdout, stderr) => {
-      if (error) {
-        console.error(`Erro ao executar o comando: ${error.message}`);
-        return;
-      }
-      if (stderr) {
-        console.error(`Erro de execução: ${stderr}`);
-        return;
-      }
-    });
-  }
+  fs.writeFileSync(authorityFile, "");
+  const command = `xauth nlist :0 | sed -e 's/^..../ffff/' | xauth -f '${authorityFile}' nmerge -`;
+
+  exec(command, (error, stdout, stderr) => {
+    if (error) {
+      console.error(`Erro ao executar o comando: ${error.message}`);
+      return;
+    }
+    if (stderr) {
+      console.error(`Erro de execução: ${stderr}`);
+      return;
+    }
+  });
 };

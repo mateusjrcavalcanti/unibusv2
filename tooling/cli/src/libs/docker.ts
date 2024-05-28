@@ -145,32 +145,34 @@ export const createContainer = async ({
   if (preFunc) await preFunc();
 
   // Create container
-  docker.createContainer(
-    {
-      ...containerProps,
-      name: `${prefix}-${containerProps.name}`,
-    },
-    async (err, result) => {
-      if (err) {
-        console.log(
-          chalk.red.bold(`Erro ao criar container ${containerName}:`),
-          chalk.red(`${err.message}`),
-        );
-        return;
-      }
-      result?.start((err) => {
+  return await new Promise<string>((resolve, reject) =>
+    docker.createContainer(
+      {
+        ...containerProps,
+        name: `${prefix}-${containerProps.name}`,
+      },
+      async (err, result) => {
         if (err) {
           console.log(
-            chalk.red.bold(`Erro ao iniciar container ${containerName}:`),
+            chalk.red.bold(`Erro ao criar container ${containerName}:`),
             chalk.red(`${err.message}`),
           );
-        } else {
-          console.log(
-            chalk.green(`Container ${containerName} criado com sucesso`),
-          );
+          return;
         }
-      });
-    },
+        result?.start((err) => {
+          if (err) {
+            console.log(
+              chalk.red.bold(`Erro ao iniciar container ${containerName}:`),
+              chalk.red(`${err.message}`),
+            );
+          } else {
+            console.log(
+              chalk.green(`Container ${containerName} criado com sucesso`),
+            );
+          }
+        });
+      },
+    ),
   );
 };
 
@@ -185,10 +187,12 @@ export const runningContainer = async ({
   );
   const { tag, files, dockerfile, build } = image;
 
-  if (container && container?.State == "running")
+  if (container && container?.State == "running") {
     await docker.getContainer(container?.Id as string).stop();
-  if (container && container?.State == "exited")
     await docker.getContainer(container?.Id as string).remove();
+  } else if (container && container?.State == "exited") {
+    await docker.getContainer(container?.Id as string).remove();
+  }
 
   const imageExists = await findImage({
     name: containerProps.name,
