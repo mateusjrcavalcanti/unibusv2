@@ -1,0 +1,30 @@
+{
+  "name": "@unibus/cli",
+  "version": "1.0.0",
+  "main": "bin/index.js",
+  "description": "",
+  "private": true,
+  "bin": {
+    "unibus": "bin/index.js"
+  },
+  "scripts": {
+    "clean:bin": "find bin -mindepth 1 ! -name 'index.js' -exec rm -rf {} +",
+    "dev": "nodemon --watch src --ext ts --exec 'pnpm clean:bin && npx tsc -p . && cp -r dockerfiles bin/dockerfiles'",
+    "build": "npx tsc -p .",
+    "start": "node ."
+  },
+  "devDependencies": {
+    "@types/dockerode": "^3.3.29",
+    "@types/figlet": "^1.5.8",
+    "node-ts": "^6.0.1",
+    "nodemon": "^3.1.1"
+  },
+  "dependencies": {
+    "chalk": "4.1.2",
+    "commander": "^12.1.0",
+    "dockerode": "^4.0.2",
+    "figlet": "^1.7.0",
+    "inquirer": "^9.2.22",
+    "ora": "^8.0.1"
+  }
+}
