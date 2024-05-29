@@ -178,10 +178,6 @@ void NetworkEventDispatch(API_Event_t *pEvent)
 
 void NetworkTestTask(void *param)
 {
-    uint8_t operatorId[6];
-    Network_Register_Mode_t mode;
-    bool ret;
-
     while (1)
     {
 

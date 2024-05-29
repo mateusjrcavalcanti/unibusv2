@@ -1,5 +1,6 @@
 
 
+// Include SDK libraries
 #include <string.h>
 #include <stdio.h>
 #include <api_os.h>
@@ -7,10 +8,13 @@
 #include <api_network.h>
 #include <api_debug.h>
 
+// Include the project libraries
 #include "main.h"
 #include "network.h"
 #include "pgps.h"
+#include "mqtt.h"
 
+// Define the main task event
 HANDLE mainTaskHandle = NULL;
 
 static void EventDispatch(API_Event_t *pEvent)
@@ -42,10 +46,14 @@ void MainTask(void *pData)
 {
     API_Event_t *event = NULL;
 
-    OS_CreateTask(NetworkTestTask, NULL, NULL, 2048, 1, 0, 0, "Get Operator Info Task");
+    // NetworkTaskHandle = OS_CreateTask(NetworkTestTask, NULL, NULL, NETWORK_TASK_STACK_SIZE, NETWORK_TASK_PRIORITY, 0, 0, NETWORK_TASK_NAME);
 
-    OS_CreateTask(gpsTask,
-                  NULL, NULL, MAIN_TASK_STACK_SIZE, MAIN_TASK_PRIORITY, 0, 0, MAIN_TASK_NAME);
+    gpsTaskHandle = OS_CreateTask(gpsTask,
+                                  NULL, NULL, PGPS_TASK_STACK_SIZE, PGPS_TASK_PRIORITY, 0, 0, PGPS_TASK_NAME);
+
+    // MQTT Task
+    mqttTaskHandle = OS_CreateTask(mqttTask,
+                                   NULL, NULL, MQTT_TASK_STACK_SIZE, MQTT_TASK_PRIORITY, 0, 0, MQTT_TASK_NAME);
 
     while (1)
     {

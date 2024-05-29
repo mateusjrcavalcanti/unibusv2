@@ -101,12 +101,18 @@ exports.createContainer = createContainer;
 const runningContainer = async ({ prefix, preFunc, image, containerProps, }) => {
     const container = await (0, exports.findContainer)(`${prefix || "unibus"}-${containerProps.name}`);
     const { tag, files, dockerfile, build } = image;
+    // console.log(container);
     if (container && container?.State == "running") {
+        console.log(chalk_1.default.yellow(`Container ${containerProps.name} já está rodando`));
         await docker.getContainer(container?.Id).stop();
+        console.log(chalk_1.default.yellow(`Container ${containerProps.name} foi parado`));
         await docker.getContainer(container?.Id).remove();
+        console.log(chalk_1.default.yellow(`Container ${containerProps.name} foi removido`));
     }
-    else if (container && container?.State == "exited") {
+    else if ((container && container?.State == "exited") ||
+        container?.State == "created") {
         await docker.getContainer(container?.Id).remove();
+        console.log(chalk_1.default.yellow(`Container ${containerProps.name} foi removido`));
     }
     const imageExists = await (0, exports.findImage)({
         name: containerProps.name,
@@ -114,6 +120,7 @@ const runningContainer = async ({ prefix, preFunc, image, containerProps, }) => 
         prefix,
     });
     if (!imageExists) {
+        console.log(chalk_1.default.yellow(`Imagem ${containerProps.name} não existe`));
         await (0, exports.createImage)({
             prefix,
             name: containerProps.name,
@@ -121,8 +128,11 @@ const runningContainer = async ({ prefix, preFunc, image, containerProps, }) => 
             dockerfile: dockerfile || "Dockerfile",
             build: build || false,
         });
-        console.log("resolvido");
     }
+    else {
+        console.log(chalk_1.default.yellow(`Imagem ${containerProps.name} já existe`));
+    }
+    console.log(chalk_1.default.yellow(`Criando container ${containerProps.name}`));
     await (0, exports.createContainer)({
         prefix,
         preFunc,
@@ -131,6 +141,7 @@ const runningContainer = async ({ prefix, preFunc, image, containerProps, }) => 
             ...containerProps,
         },
     });
+    console.log(chalk_1.default.green(`Container ${containerProps.name} criado com sucesso`));
     return container;
 };
 exports.runningContainer = runningContainer;

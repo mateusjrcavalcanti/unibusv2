@@ -186,12 +186,22 @@ export const runningContainer = async ({
     `${prefix || "unibus"}-${containerProps.name}`,
   );
   const { tag, files, dockerfile, build } = image;
+  // console.log(container);
 
   if (container && container?.State == "running") {
+    console.log(
+      chalk.yellow(`Container ${containerProps.name} já está rodando`),
+    );
     await docker.getContainer(container?.Id as string).stop();
+    console.log(chalk.yellow(`Container ${containerProps.name} foi parado`));
     await docker.getContainer(container?.Id as string).remove();
-  } else if (container && container?.State == "exited") {
+    console.log(chalk.yellow(`Container ${containerProps.name} foi removido`));
+  } else if (
+    (container && container?.State == "exited") ||
+    container?.State == "created"
+  ) {
     await docker.getContainer(container?.Id as string).remove();
+    console.log(chalk.yellow(`Container ${containerProps.name} foi removido`));
   }
 
   const imageExists = await findImage({
@@ -201,6 +211,7 @@ export const runningContainer = async ({
   });
 
   if (!imageExists) {
+    console.log(chalk.yellow(`Imagem ${containerProps.name} não existe`));
     await createImage({
       prefix,
       name: containerProps.name,
@@ -208,8 +219,11 @@ export const runningContainer = async ({
       dockerfile: dockerfile || "Dockerfile",
       build: build || false,
     });
-    console.log("resolvido");
+  } else {
+    console.log(chalk.yellow(`Imagem ${containerProps.name} já existe`));
   }
+
+  console.log(chalk.yellow(`Criando container ${containerProps.name}`));
 
   await createContainer({
     prefix,
@@ -219,6 +233,9 @@ export const runningContainer = async ({
       ...containerProps,
     },
   });
+  console.log(
+    chalk.green(`Container ${containerProps.name} criado com sucesso`),
+  );
 
   return container;
 };

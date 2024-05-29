@@ -13,7 +13,7 @@ LOCAL_ADD_INCLUDE := include\
                     include/std_inc \
                     include/api_inc \
                     libs/utils/include \
-                     libs/gps/minmea/src \
+                    libs/gps/minmea/src \
 
 
 # Set this to any non-null string to signal a module which 

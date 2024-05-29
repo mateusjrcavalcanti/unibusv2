@@ -14,6 +14,7 @@
 // Include the project libraries
 #include "pgps.h"
 #include "network.h"
+#include "mqtt.h"
 
 // Define the network task event
 HANDLE gpsTaskHandle = NULL;
@@ -129,8 +130,15 @@ void gpsTask(void *pData)
                      gpsInfo->gga.fix_quality, gpsInfo->gga.satellites_tracked, gpsInfo->gsv[0].total_sats, isFixedStr, latitude, longitude, gpsInfo->gga.altitude);
             // show in tracer
             Trace(2, buffer);
+
+            // send the coordinates string to MQTT
+            if (mqttStatus == MQTT_STATUS_CONNECTED)
+            {
+                snprintf(buffer, sizeof(buffer), "%f,%f", latitude, longitude);
+                mqttPublish(client, buffer);
+            }
         }
 
-        OS_Sleep(5000);
+        OS_Sleep(1000);
     }
 }

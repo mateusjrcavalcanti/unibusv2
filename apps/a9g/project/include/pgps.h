@@ -7,7 +7,7 @@
 
 // Define the network task parameters
 #define PGPS_TASK_STACK_SIZE (2048 * 2)
-#define PGPS_TASK_PRIORITY 2
+#define PGPS_TASK_PRIORITY 1
 #define PGPS_TASK_NAME "GPS Task"
 
 // Define the network task event
