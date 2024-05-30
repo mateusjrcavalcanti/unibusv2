@@ -8,11 +8,9 @@ import { a9gContainer } from "./up";
 export default createCommand("coolwatcher")
   .description("Inicia o container de desenvolvimento do A9G")
   .action(async () => {
-    if ((await findContainer("unibus-a9g"))?.State !== "running") {
-      await a9gContainer();
-    }
-    const container = await findContainer("unibus-a9g");
-    container && coolwatcher(container);
+    const container = await a9gContainer();
+
+    container && (await coolwatcher(container));
   });
 
 const coolwatcher = async (container: Dockerode.ContainerInfo) =>
